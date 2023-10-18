@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8" />
+<head>
+    <title>Mapa cluster y buscador</title>
+    <script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+	 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css"/>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/MarkerCluster.Default.css" />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script> <!--enlace para el buscador de coordenadas-->
+    
+<!--Librerías para llamar la función cluster map-->
+<!--<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.5.0/MarkerCluster.Default.css" />
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.5.0/leaflet.markercluster.js"></script>
+	
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+     hasta aca estan las librerias de cluster -->
+    
+	 <!--Enclaces a las carpetas del buscador-->
+
+    
+     
+	 
+<!--Objeto Div que incluye la apariencia del marco del mapa-->
+ <style>
+  #map { 
+	  width: 100%;
+	  height: 900px;
+	  box-shadow: 5px 5px 5px #888;
+  }
+
+
+
+
+ </style>
+ 
+ </head>
+  <body>
+   <div id="map"></div><!--Objeto div que inserta el mapa-->
+
+
+   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/leaflet.markercluster.js"></script> 
+   <script src="leaflet-search-master\src\leaflet-search.js"></script>
+   <link rel="stylesheet" href="leaflet-search-master\src\leaflet-search.css" />
+   <script src="https://unpkg.com/leaflet-control-geocoder@1.13.0/dist/Control.Geocoder.js"></script>  <!--enlace para llamar el plugin del buscador de coordenadas-->
+
+  
+
+   <script src="p99_norte_copia.js"></script>
+   <script src="p99_sur_copia.js"></script>
+   <script src="cuadri_wgs84_copia3.js"></script>
+   <script src="buffers_cdmx_copia.js"></script>
+
+  
+<!---->
+
+ <script>
+
+var datos = cuadri2; 
+ 
+ var map = L.map("map").setView([19.408389, -99.1202789], 13);
+	
+	//Esta linea añade un mapa base o las capas de openstreet map en este caso
+    L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
+        maxZoom: 18
+      }).addTo(map);
+
+
+//función para mostrar los atributos de la capa 
+var featuresLayer = new L.GeoJSON(datos, {
+        style: function(feature) {
+            return { color: feature.properties.color, opacity: 0.70 };
+        },
+        onEachFeature: function(feature, marker) {
+            var popupContent = '<h4 style="color:' + feature.properties.color + '">' +
+                               'ID: ' + feature.properties.id + '</h4>' +
+                               'NUMPOINTS: ' + feature.properties.NUMPOINTS;
+            marker.bindPopup(popupContent).addTo(map);  //recuerda siempre agregar el add.To(map) por esa razon no lo cargaba en el mapa 
+        }
+    });      
+
+
+
+
+// Crear grupos de marcadores
+var markers1 = L.markerClusterGroup();
+var markers2 = L.markerClusterGroup();
+
+
+// Cargar datos GeoJSON en las capas
+var geojsonLayer1 = L.geoJSON(norte, {
+    pointToLayer: function (feature, latlng) {
+        return L.circleMarker(latlng, {
+            radius: 8,
+            fillColor: 'blue', // Personaliza el color
+            color: '#000',
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+        });
+    }
+});
+
+var geojsonLayer2 = L.geoJSON(sur, {
+    pointToLayer: function (feature, latlng) {
+        return L.circleMarker(latlng, {
+            radius: 8,
+            fillColor: 'red', // Personaliza el color
+            color: '#000',
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+        });
+    }
+});
+
+
+// Agregar las capas de GeoJSON a los grupos de marcadores
+markers1.addLayer(geojsonLayer1);
+markers2.addLayer(geojsonLayer2);
+    
+
+// Agregar los grupos de marcadores al mapa
+map.addLayer(markers1);
+map.addLayer(markers2);
+
+
+// Crear un controlador de capas
+var overlayMaps = {
+    "Capa 1": markers1,
+    "Capa 2": markers2
+    
+};
+
+
+L.control.layers(null, overlayMaps).addTo(map);
+
+var buferrs = L.geoJSON(buffers).addTo(map);
+
+
+
+
+
+
+//función para mostrar los atributos de la capa 
+    
+
+
+
+
+
+
+
+      L.Control.geocoder().addTo(map);  
+
+      
+  
+      
+      var geocoder = L.Control.geocoder({
+  defaultMarkGeocode: false
+})
+  .on('markgeocode', function(e) {
+    var bbox = e.geocode.bbox;
+    var poly = L.polygon([
+      bbox.getSouthEast(),
+      bbox.getNorthEast(),
+      bbox.getNorthWest(),
+      bbox.getSouthWest()
+    ]).addTo(map);
+    map.fitBounds(poly.getBounds());
+  })
+  .addTo(map);     
+      
+
+
+//Terecer intento
+
+
+
+
+
+
+
+
+ </script>
+ </body> 
+ </html>
